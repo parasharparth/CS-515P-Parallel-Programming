@@ -1,0 +1,9 @@
+Vector--> at the hardware level (registers and all can be replicated to produce parallel programming results)
+multi-core --> Operating system handles them and acts as a resource handled by the OS 
+GPU --> Processor level large scale synchrnous parallelism --> There needs to be a host to provide the "instructions"
+SIMD--> Same instruction, multiple CPU(s)--> controlled by synchronous clocks
+SMP--> Multi-core (system level)
+NUMA--> simulation of memory virtually
+MPP--> multiple computers connected by network interacting using message (one network and the topology is flat)
+cluster--> nodes + multiple networks
+ 

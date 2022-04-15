@@ -1,0 +1,11 @@
+barrier and join --> similar just that in barrier, children also know that the state of each thread whereas in the join, only parent knows.
+
+Also, when barrier is used, then the threads also need to be detachable to avoid any dangling threads 
+Parent also can be connected using barrier--> then you don't need the join --> done by p+1
+
+Mutx locks--> protecting the CP
+Condition variable --> for cp's conditions to be atomic
+then to make Condition variables non-blocking--> we have wait and signal
+
+It all depends on the program counter --> the stack which helps in the stack implementation
+Priority queue for assigning each core and the priority changes when youe expllicitely assign cores to the threads

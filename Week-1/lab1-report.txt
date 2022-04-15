@@ -1,0 +1,32 @@
+ 				   												LAB-1 Report
+I have completed all the nine exercises as given in the Lab-1 manual. 
+The screenshots for the same are attached in the document submitted with this report.
+
+While solving the questions based on Pthreads library of C, Threads Library of C and Threads library of Java, I did not encounter any major challenges except for the part where I had to figure out why the threads in 
+Java were not producing the correct result in exercise 3. 
+Turns out, it is a lot harder to figure out what is wrong (debugging) in multi-threaded programming than it is in sequential programming. 
+Exercise-3 was not producing the correct result because of the global variable sum, which was being shared among the threads. 
+In java, while each thread has its own set of the local variables, the global variables are shared. 
+Also, when multiple processes with similar threads are run, the entanglment increases as the thread pool is limited for JVM (Java Thread Pool).
+As the number of threads increased, the JVM and java compiler were not able to keep up with the pace of the threads and hence the variable was changed wrongly by different threads at different points in time. 
+This is a classic example of non-atomic operations in a race condition. 
+
+OpenMp, OpenMPI and chapel are something which I have not worked on before. So, to understand the workflow for these was a bit challenging. 
+I had to read the documentation and class notes to understand the exact working and flow for these.
+I also encountered issues with setting the bash_profile variables for OpenMpi and chapel as locating the bash_profile was a lot harder than it should have been.
+It was not accessible from the /etc/ directory where it generally is present in most of the Linux systems.
+I had to create a new bash_profile to run these programs. 
+Also, for chapel programs Sum1 and Sum2, -nl as an argument was not working and hence I had to use --numLocales==<#>
+While I had made changes to the bash_profile and added the list of servers, I was making a mistake of adding the list of servers in a way that each server was written in the next line.
+While it made them more readable, the chapel programs sum1 and sum2 behaved weirdly. It did not compute anything and would just restart the entire shell. It took me some time to figure it out after which the chapel
+programs started compiling properly.
+
+Posix Threads or as they are called as pthreads, are one of the most commonly used thread libraries in the world. But one of the hardest things is to transition from one thread library to another.
+While each library brings one benefit or the other, there is still no particular language or library which deals with all the difficulties at once. There are trade-offs between one thing or the other.
+I have worked with C and Java threads in the past and now, I am excited to work with chapel.
+While the chapel programs in the lab-exercises taught a little about the capabilities of the language, there is a lot more to it than just parallel programming.
+It has support for many interesting features like distributed arrays that can utilise the nodes, memory, and cores very efficiently. This was also effectively demonstrated in the sum2.chpl program where the number of locales was 4.
+It calculated the sum on 4 nodes at the same time. The power to distribute these tasks on different shells and then combine them to form the final result is amazing.
+Even while terminating the shells, there were 4 different shells running which had to terminated using the exit command.
+It might be a little slow, but it is interesting to learn and is something that I am looking forward to.
+
