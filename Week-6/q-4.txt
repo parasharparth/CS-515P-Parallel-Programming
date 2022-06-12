@@ -1,0 +1,232 @@
+//-----------------------------------------------------------------------------
+// Program code for CS 415P/515 Parallel Programming, Portland State University
+//-----------------------------------------------------------------------------
+​
+// A prime-finding program (Sequential version).
+//
+// Usage:
+//   linux> ./prime N
+//
+#include <iostream>
+#include <cmath>
+#include <thread>
+#include <mutex>
+#include <string>
+#include <vector>
+#include <map>
+#include <condition_variable>
+using namespace std;
+int N;
+int P;
+int totalPrimes;
+vector<int> sieve;
+bool* candidate;
+mutex conMtx;
+mutex mtx;
+condition_variable cvar;
+int totalSieves = 0;
+map<int, int> stats;
+int idx = 0;
+​
+​
+void ConsolePrint(string message)
+{
+    conMtx.lock();
+    cout << message << "\n";
+    conMtx.unlock();
+}
+void worker(int tID)
+{
+    int start, end;
+    int remaining = N - sqrt(N);
+    int div = (remaining) / P;
+​
+    start = (sqrt(N)) + (div * tID) + 1;
+​
+    if (tID == (P - 1))
+    {
+        end = N;
+    }
+    else
+    {
+        end = (sqrt(N)) + (div * (tID + 1));
+    }
+​
+    //ConsolePrint("starting threadID: " + std::to_string(tID) + ". Start: "+ std::to_string(start) +" End: " + std::to_string(end));
+    for (int i = start; i <= end; i++)
+    {
+        candidate[i] = true;
+    }
+    //    ConsolePrint("total sieves value is "+std::to_string(totalSieves));
+    for (int i = 0; i < sieve.size(); i++)
+    {
+​
+        if (i >= totalSieves)
+        {
+            break;
+        }
+        unique_lock<mutex> lck(mtx);
+        while (sieve[i] == 0 && i < totalSieves)
+        {
+            ConsolePrint("Waiting -----");
+            cvar.wait(lck);
+        }
+        lck.unlock();
+​
+​
+        //ConsolePrint("Starting thread " + std::to_string(tID) + " i=" + std::to_string(i));
+        if (candidate[sieve[i]])
+        {
+​
+            int temp = start;
+            while (temp % sieve[i] != 0)
+            {
+                temp++;
+            }
+​
+            ConsolePrint("starting threadID: " + std::to_string(tID) + ". Start: " + std::to_string(temp) + " End: " + std::to_string(end) + " Sieve: " + std::to_string(sieve[i]));
+​
+            for (int j = temp; j <= end; j += sieve[i])
+            {
+                candidate[j] = false;
+                ConsolePrint("threadID: " + std::to_string(tID) + ". i: " + std::to_string(i) + " j: " +
+                std::to_string(j) );
+            }
+        }
+//        lck.unlock();
+        cvar.notify_all();
+​
+    }
+​
+    for (int i = start; i <= end; i++)
+    {
+        if (candidate[i])
+        {
+            unique_lock<mutex> lck(mtx);
+            totalPrimes++;
+            //            ConsolePrint("Calculating primes for threadID: " + std::to_string(tID) + ". Start: "+ std::to_string(start) +" End: " + std::to_string(end));
+            lck.unlock();
+            //ConsolePrint("threadID: " + std::to_string(tID) + ". Idx: " + std::to_string(i));
+​
+        }
+​
+    }
+}
+int main(int argc, char** argv) {
+    //int sqrtN = sqrt(N);
+    N = 100;
+    P = 5;
+​
+    //    if (argc < 2) {
+//        cout << "Usage: ./prime N\n";
+//        exit(0);
+//    }
+//
+//    if (argc == 2)
+//    {
+//        P = 1;
+//        if ((N = atoi(argv[1])) < 2) {
+//            cout << "N must be greater than 1\n";
+//            exit(0);
+//        }
+//    }
+//    if (argc > 2)
+//    {
+//        if ((N = atoi(argv[1])) < 2) {
+//            cout << "N must be greater than 1\n";
+//            exit(0);
+//        }
+//        if ((P = atoi(argv[2])) <=0 )
+//        {
+//            cout << "P must be greater than 0\n";
+//            exit(0);
+//        }
+//    }
+    int sqrtN = sqrt(N);
+    ConsolePrint("prime (seq) over [2.." + std::to_string(N) + "] starting ...");
+    candidate = new bool[N + 1];
+    sieve.resize(sqrtN);
+​
+    for (int i = 0; i < P; i++)
+    {
+        stats.insert({ i, 0 });
+    }
+    thread th[P];
+    for (int i = 0; i < P; i++)
+    {
+        th[i] = thread(worker, i);
+    }
+​
+    for (int i = 2; i <= sqrtN; i++)
+    {
+        candidate[i] = true;
+    }
+​
+    int idx = 0;
+    for (int i = 2; i <= sqrtN; i++)
+    {
+        ConsolePrint("sqrt value " +std::to_string(sqrt(sqrtN)));
+        ConsolePrint("outside if loop Now checking for " +std::to_string(i));
+​
+        if (candidate[i])
+        {
+            ConsolePrint("Now checking for " +std::to_string(i));
+            unique_lock<mutex> lck(mtx);
+            sieve[idx] = i;
+            totalSieves = idx+1;
+            idx++;
+            ConsolePrint("Sieve produced is "+std::to_string(i));
+            cvar.notify_all();
+            for (int j = i + i; j <= sqrtN; j += i)
+            {
+                candidate[j] = false;
+            }
+​
+            lck.unlock();
+        }
+​
+​
+    }
+​
+//    totalSieves = idx+1;
+//    ConsolePrint("The total sieve is -------- "+std::to_string(totalSieves));
+​
+    for (int i = 2; i <= sqrtN; i++)
+    {
+        if (candidate[i])
+        {
+            unique_lock<mutex> lck(mtx);
+//            sieve[idx] = i;
+            totalPrimes++;
+//            totalSieves++;
+            lck.unlock();
+//            cvar.notify_all();
+​
+//            idx++;
+        }
+    }
+​
+//    ConsolePrint("Total primes of main "+std::to_string(totalPrimes));
+//    for (int i = 0; i < sqrtN; i++)
+//    {
+//        ConsolePrint(std::to_string(sieve[i]));
+//    }
+​
+​
+    for (int i = 0; i < P; i++)
+    {
+        th[i].join();
+    }
+//    for (int i=2; i<=N; i++)
+//    {
+//        totalPrimes++;
+//    }
+​
+    for (int i = 2; i <= N; i++)
+    {
+        if (candidate[i])
+            ConsolePrint(std::to_string(i));
+    }
+​
+    ConsolePrint("prime (seq) found " + std::to_string(totalPrimes) + " primes");
+}
