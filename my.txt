@@ -1,0 +1,80 @@
+package prodcons;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class ProdCons {
+
+	Queue<Integer> queue = new LinkedList<Integer>();
+	int BUFFSIZE = 20;
+	int NUMITEMS = 100;
+	
+	public static void main(String args[]) throws InterruptedException
+	{
+		ProdCons pr = new ProdCons();
+		
+		// Create producer thread
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+                try {
+					pr.produce();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+            }
+        });
+        
+        // Create consumer thread
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+                try {
+					pr.consume();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+            }
+        });
+
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        System.out.println("Main: all done");
+	}
+	
+	public void produce() throws InterruptedException{
+		 int value = 0;
+		 synchronized (this)
+         {
+         for(int i=0; i<=NUMITEMS; i++) {
+                 while (queue.size() == BUFFSIZE)
+                     wait();
+                 
+                	 System.out.println("Producer added-" + value +" qsz: "+queue.size());
+                	 queue.add(value++);
+                	 notify();
+             }
+         }
+         System.out.println("Producer ends");
+	}
+	
+	public void consume() throws InterruptedException{
+		synchronized (this)
+        {
+		for(int i=0; i<=NUMITEMS; i++) {
+                while (queue.size() == 0)
+                    wait();
+                
+                	int val = queue.remove();
+                	System.out.println("Consumer consumed-" + val +" qsz: "+queue.size());
+                	notify();
+                
+            }
+		}
+		System.out.println("Consumer ends");
+	}
+}
